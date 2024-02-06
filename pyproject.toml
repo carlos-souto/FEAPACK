@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "feapack"
+version = "0.1.0"
+authors = [
+    { name="Carlos Souto", email="csouto@fe.up.pt" },
+]
+description = "A finite element analysis package for solids using Python."
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "numpy",
+    "mkl<2024",
+    "vtk",
+    "PySide6",
+    "pillow",
+]
+
+[project.urls]
+Homepage = "https://carlos-souto.github.io/FEAPACK/index.html"
+Documentation = "https://carlos-souto.github.io/FEAPACK/guide.html"
+Repository = "https://github.com/carlos-souto/FEAPACK"
+Issues = "https://github.com/carlos-souto/FEAPACK/issues"
+Changelog = "https://github.com/carlos-souto/FEAPACK/blob/master/CHANGELOG.md"

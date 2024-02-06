@@ -9,6 +9,15 @@
 # .gitattributes file
 !.gitattributes
 
+# README.md
+!README.md
+
+# CHANGELOG.md
+!CHANGELOG.md
+
+# pyproject.toml
+!pyproject.toml
+
 # python source files
 !*.py
 
@@ -21,7 +30,7 @@
 # css source files
 !*.css
 
-# Abaqus input files
+# abaqus input files
 !*.inp
 
 # resources
