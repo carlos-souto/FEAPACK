@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>FEAPACK Basic Example #3</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="listexamples.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    </head>
+    <body>
+        <nav id="navbar" class="navbar">
+            <a href="index.html">Home</a>
+            <a href="guide.html">Quick Start Guide</a>
+            <div class="dropdown">
+                <button class="dropdown-button">Examples ↴</button>
+                <div id="dropdown-examples" class="dropdown-content"></div>
+            </div>
+        </nav>
+        <div class="content">
+            <h1>FEAPACK Examples</h1>
+            <h2>Basic example #3: Analysis of a pressure vessel.</h2>
+            <p>The following figure represents the cross-section of an axisymmetric pressure vessel:</p>
+            <img src="resources/basic3_1.png">
+            <p>The cylindrical pressure vessel has two hemispherical ends, one of which is supported by a skirt. Dimensions are shown in mm. The material (steel) is considered elastic, homogeneous, and isotropic, defined by a Young's modulus of 210 GPa, a Poisson's ration of 0.3, and a density of 7.85 g/cm³. The internal pressure has a magnitude of 80 Bar(g). The objective is to perform a static analysis in order to determine if the pressure vessel can handle the internal pressure. The self-weight of the vessel should be considered in the analysis. An axisymmetric stress state is assumed.</p>
+            <p>Consistent units: below, the geometry will be defined in mm, whereas the Young's modulus and internal pressure are defined in MPa. Additionally, the acceleration due to gravity is specified in mm/s² and the density is specified in t/mm³. Consequently, results are computed in N (forces), mm (displacements), mm/mm (strains), and MPa (stresses).</p>
+            <p>The FEAPACK files for this example can be found <a href="https://github.com/carlos-souto/FEAPACK/tree/master/docs/examples/basic3">here</a>.</p>
+            <div class="separator"></div>
+            <h2>Solution via FEAPACK:</h2>
+            <p>Start by creating a job script named <code>basic3.py</code> and import the modules shown below. In this example, we will run the solver in parallel mode. For multiprocessing, the main guard is required:</p>
+            <pre class="prettyprint linenums:1"><code class="language-py">import feapack.model
+import feapack.solver
+
+# main guard required for multiprocessing
+if __name__ == '__main__':
+            </code></pre>
+            <p>For this example, a finite element mesh has been prepared in <code>basic3.inp</code>:</p>
+            <img src="resources/basic3_2.png">
+            <p>The <code>basic3.inp</code> defines 51,007 nodes and 24,320 <code>CAX6</code> elements. The supported Abaqus element types are automatically converted into the comparable FEAPACK element types (in this case, the <code>CAX6</code> elements are converted into <code>Plane6</code> elements). Additionally, Abaqus stores the element connectivity using 1-based indexing, which is automatically converted into 0-based indexing, as required by FEAPACK.</p>
+            <p>The mesh input file also defines the following sets:</p>
+            <ul>
+                <li><code>'INTERNAL-SURFACE-NODES'</code> containing the nodes coinciding with the internal surface of the pressure vessel.</li>
+                <li><code>'BASE-NODES'</code> containing the nodes coinciding with the bottom surface of the skirt, contacting the ground.</li>
+                <li><code>'ALL-ELEMENTS'</code>containing all the elements of the finite element mesh.</li>
+            </ul>
+            <p>Due to a technical limitation, the name of any set defined within an Abaqus input file is always automatically converted to upper case. Moreover, 1-based indexing is automatically converted into 0-based indexing, as required by FEAPACK.</p>
+            <p>Inside the main guard of the job script, the following code loads the mesh shown above into a new model database (MDB) and prints the names of the available node and element sets:</p>
+            <pre class="prettyprint linenums:7"><code class="language-py"></code>    # create model database (MDB)
+    mdb = feapack.model.MDB.fromFile('basic3.inp')
+
+    # node sets and element sets are defined in the 'basic3.inp' file
+    # set names are automatically converted to upper case (technical limitation)
+    print('Node sets:', *mdb.nodeSets.keys())       # Node sets: INTERNAL-SURFACE-NODES BASE-NODES
+    print('Element sets:', *mdb.elementSets.keys()) # Element sets: ALL-ELEMENTS
+            </pre>
+            <p>Next, the surface set shown below is created. Surface sets cannot be defined in a mesh input file, as they are based on a custom implementation:</p>
+            <pre class="prettyprint linenums:15"><code class="language-py">    # however, surface sets in FEAPACK have their own format, so they have to be created here
+    mdb.surfaceSet(name='INTERNAL-SURFACE', surfaceNodes='INTERNAL-SURFACE-NODES')
+            </code></pre>
+            <p>The material and section are defined as follows:</p>
+            <pre class="prettyprint linenums:18"><code class="language-py">    # create material and section
+    mdb.material(name='STEEL', young=210000.0, poisson=0.3, density=7.85e-9) # density required for gravity load
+    mdb.section(
+        name='STEEL-SECTION',
+        region='ALL-ELEMENTS',
+        material='STEEL',
+        type=feapack.model.SectionTypes.Axisymmetric, # or simply 'Axisymmetric'
+        reducedIntegration=False
+    )
+            </code></pre>
+            <p>We then define the following loads and boundary condition:</p>
+            <pre class="prettyprint linenums:28"><code class="language-py">    # create loads
+    mdb.acceleration(name='GRAVITY', region='ALL-ELEMENTS', y=-9806.65)
+    mdb.pressure(name='INTERNAL-PRESSURE', region='INTERNAL-SURFACE', magnitude=8.0)
+
+    # create boundary condition
+    mdb.boundaryCondition(name='FIXED-BASE', region='BASE-NODES', u=0.0, v=0.0)
+            </code></pre>
+            <p>Finally, we call the solver, still within the main guard:</p>
+            <pre class="prettyprint linenums:35"><code class="language-py">    # call solver inside main guard for multiprocessing
+    # specifying processes > 1 will enable parallel mode
+    feapack.solver.solve(mdb, analysis='static', processes=4)
+            </code></pre>
+            <p>To actually perform the finite element analysis, the following command is used: <code>python basic3.py</code>. The file <code>basic3.out</code> will be generated upon a successful run. Then, the viewer application can be launched using the following command: <code>python -m feapack.viewer</code>.</p>
+            <p>Animated results generated using the viewer application:</p>
+            <img src="resources/basic3_3.gif">
+            <p>As a form of validation, here are the results from FEAPACK vs. Abaqus using the comparable <code>CAX6</code> element:</p>
+            <img src="resources/basic3_4.png">
+            <p><i>FEAPACK</i></p>
+            <img src="resources/basic3_5.png">
+            <p><i>Abaqus</i></p>
+        </div>
+    </body>
+</html>

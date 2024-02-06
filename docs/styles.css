@@ -1,0 +1,104 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.navbar {
+    font-size: 12pt;
+    overflow: hidden;
+    color: #ffffff;
+    background-color: #404040;
+}
+
+.navbar a {
+    color: inherit;
+    background-color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+    padding: 14px 16px;
+    text-decoration: none;
+    display: block;
+    float: left;
+}
+
+.navbar a:hover {
+    background-color: #808080;
+}
+
+.dropdown {
+    float: left;
+}
+
+.dropdown-button {
+    color: inherit;
+    background-color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+    padding: 14px 16px;
+    border: none;
+}
+
+.dropdown-button:hover {
+    background-color: #808080;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    color: #ffffff;
+    background-color: #404040;
+}
+
+.dropdown-content a {
+    float: none;
+    text-align: left;
+    font-size: 10pt;
+    padding: 10px;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropdown-button {
+    background-color: #808080;
+}
+
+.content {
+    margin: 20px;
+}
+
+.separator {
+    height: 1px;
+    margin: 40px -15px;
+    background-color: #404040;
+}
+
+.prettyprint {
+    background-color: #f2f2f2;
+}
+
+.prettyprint ol.linenums > li {
+    list-style: decimal;
+    background-color: #f2f2f2;
+}
+
+.toc ol {
+    list-style-type: none;
+    counter-reset: section;
+}
+
+.toc ol li {
+    margin: 15px -10px;
+    font-weight: bold;
+}
+
+.toc ol li ol li {
+    margin: 5px -10px;
+    font-weight: normal;
+}
+
+.toc li::before {
+    counter-increment: section;
+    content: counters(section, ".") ". ";
+}

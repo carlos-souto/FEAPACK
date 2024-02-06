@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <style>.dark-yellow{fill: #806000; opacity: 1.0;}.light-yellow{fill: #FFDF80; opacity: 1.0;}.light-blue{fill: #80C0FF; opacity: 1.0;}.cls-1{opacity: 0.8;}</style>
+  </defs>
+  <g class="cls-1">
+    <path class="dark-yellow" d="M11.5,6V8H3.431l-.464.314L1.5,11.981V4.5h4L7,6h4.5Z" />
+    <path class="dark-yellow" d="M14.5,8.5l-2,5H1.5l2-5Z" />
+    <path class="light-yellow" d="M14.431,8H12V5.5L11.5,5H11V8H3.431l-.464.314L2,10.8V5H5.293l1,1H8V5H6.707l-.853-.854L5.5,4h-4L1,4.5v8.864L1.431,14h11l.464-.314,2-5Zm-2.339,5H2.169l1.6-4h9.922Z" />
+    <path class="light-blue" d="M14.854,2.146v.708l-2,2-.707-.708L13.293,3H12a2,2,0,0,0-2,2V6H9V5a3,3,0,0,1,3-3h1.293L12.147.854l.707-.708Z" />
+  </g>
+</svg>

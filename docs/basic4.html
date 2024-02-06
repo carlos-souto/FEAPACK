@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>FEAPACK Basic Example #4</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="listexamples.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    </head>
+    <body>
+        <nav id="navbar" class="navbar">
+            <a href="index.html">Home</a>
+            <a href="guide.html">Quick Start Guide</a>
+            <div class="dropdown">
+                <button class="dropdown-button">Examples ↴</button>
+                <div id="dropdown-examples" class="dropdown-content"></div>
+            </div>
+        </nav>
+        <div class="content">
+            <h1>FEAPACK Examples</h1>
+            <h2>Basic example #4: Free vibration of a rectangular plate.</h2>
+            <p>Consider the following rectangular plate:</p>
+            <img src="resources/basic4_1.png">
+            <p>The plate has a length of 200 mm, a width of 180 mm, and a thickness of 5 mm. The plate is fixed/supported on all its sides. The material (steel) is considered elastic, homogeneous, and isotropic, defined by a Young's modulus of 210 GPa, a Poisson's ration of 0.3, and a density of 7.85 g/cm³. The objective is to perform a frequency (modal) analysis in order to obtain the plate's first 10 normal modes of vibration and corresponding natural frequencies.</p>
+            <p>Consistent units: below, the geometry will be defined in mm, whereas the Young's modulus is defined in MPa. Additionally, the density is specified in t/mm³. Consequently, displacements are computed in mm and frequencies in Hz (cycles/s).</p>
+            <p>The FEAPACK files for this example can be found <a href="https://github.com/carlos-souto/FEAPACK/tree/master/docs/examples/basic4">here</a>.</p>
+            <div class="separator"></div>
+            <h2>Solution via FEAPACK:</h2>
+            <p>Start by creating a job script named <code>basic4.py</code> and import the modules shown below. In this example, we will run the solver in parallel mode. For multiprocessing, the main guard is required:</p>
+            <pre class="prettyprint linenums:1"><code class="language-py">import feapack.model
+import feapack.solver
+
+# main guard required for multiprocessing
+if __name__ == '__main__':
+            </code></pre>
+            <p>For this example, a finite element mesh has been prepared in <code>basic4.inp</code>:</p>
+            <img src="resources/basic4_2.png">
+            <p>The <code>basic4.inp</code> file defines 9,102 nodes and 7,200 <code>C3D8</code> elements. The supported Abaqus element types are automatically converted into the comparable FEAPACK element types (in this case, the <code>C3D8</code> elements are converted into <code>Volume8</code> elements). Additionally, Abaqus stores the element connectivity using 1-based indexing, which is automatically converted into 0-based indexing, as required by FEAPACK.</p>
+            <p>Inside the main guard of the job script, the following code loads the mesh shown above into a new model database (MDB):</p>
+            <pre class="prettyprint linenums:7"><code class="language-py">    # create model database (MDB)
+    mdb = feapack.model.MDB.fromFile('basic4.inp')
+            </code></pre>
+            <p>Next, the following node set and element set are created, which are later used to apply the boundary condition and for the section assignments, respectively:</p>
+            <pre class="prettyprint linenums:10"><code class="language-py">    # create sets
+    mdb.nodeSet(
+        name='side nodes',
+        indices=(node.index for node in mdb.mesh.nodes if abs(node.x) == 100.0 or abs(node.y) == 90.0)
+    )
+
+    mdb.elementSet(
+        name='all elements',
+        indices=range(mdb.mesh.elementCount)
+    )
+            </code></pre>
+            <p>Then, the material and section are defined as follows:</p>
+            <pre class="prettyprint linenums:21"><code class="language-py">    # create material and section
+    mdb.material(name='steel', young=210000.0, poisson=0.3, density=7.85e-9) # density required for frequency analysis
+
+    mdb.section(
+        name='steel section',
+        region='all elements',
+        material='steel',
+        type=feapack.model.SectionTypes.General, # or simply 'General'
+        reducedIntegration=False
+    )
+            </code></pre>
+            <p>We then define the following boundary condition:</p>
+            <pre class="prettyprint linenums:32"><code class="language-py">    # create boundary condition
+    mdb.boundaryCondition(name='fixed sides', region='side nodes', u=0.0, v=0.0, w=0.0)
+            </code></pre>
+            <p>Finally, we call the solver, still within the main guard, while also specifying the requested number of normal modes:</p>
+            <pre class="prettyprint linenums:35"><code class="language-py">    # call solver inside main guard for multiprocessing
+    # specifying processes > 1 will enable parallel mode
+    # k0 specifies the requested number of eigenvalues and corresponding eigenvectors
+    feapack.solver.solve(mdb, analysis='frequency', k0=10, processes=4)
+            </code></pre>
+            <p>To actually perform the finite element analysis, the following command is used: <code>python basic4.py</code>. The file <code>basic4.out</code> will be generated upon a successful run. Then, the viewer application can be launched using the following command: <code>python -m feapack.viewer</code>.</p>
+            <p>Animated results generated using the viewer application:</p>
+            <img src="resources/basic4_3.gif">
+            <p>Note: mode shapes are normalized with respect to the mass matrix of the system (as customary).</p>
+            <p>As a form of validation, here are the results from FEAPACK vs. Abaqus using the comparable <code>C3D8</code> element:</p>
+            <img src="resources/basic4_4.png">
+            <p><i>FEAPACK (Mode 4)</i></p>
+            <img src="resources/basic4_5.png">
+            <p><i>Abaqus (Mode 4)</i></p>
+        </div>
+    </body>
+</html>

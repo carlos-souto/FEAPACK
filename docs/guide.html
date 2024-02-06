@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>FEAPACK Quick Start Guide</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="listexamples.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    </head>
+    <body>
+        <nav id="navbar" class="navbar">
+            <a href="index.html">Home</a>
+            <a href="guide.html">Quick Start Guide</a>
+            <div class="dropdown">
+                <button class="dropdown-button">Examples ↴</button>
+                <div id="dropdown-examples" class="dropdown-content"></div>
+            </div>
+        </nav>
+        <div class="content">
+            <h1>FEAPACK Quick Start Guide</h1>
+            <p>Last updated on 2024-01-28.</p>
+            <div class="separator"></div>
+            <h2>Contents</h2>
+            <div class="toc">
+                <ol>
+                    <li>
+                        <a href="#introduction">Introduction</a>
+                        <ol>
+                            <li><a href="#whatis">What is FEAPACK</a></li>
+                            <li><a href="#whatisnot">What FEAPACK is not</a></li>
+                            <li><a href="#meshfile">How to generate a mesh input file</a></li>
+                        </ol>
+                    </li>
+                    <li>
+                        <a href="#examples">Examples</a>
+                        <ol>
+                            <li><a href="#basicexamples">Basic examples</a></li>
+                            <li><a href="#advancedexamples">Advanced examples</a></li>
+                        </ol>
+                    </li>
+                </ol>
+            </div>
+            <div class="separator"></div>
+            <h2 id="introduction">1. Introduction</h2>
+            <p>This is a quick start guide for FEAPACK, a finite element analysis package for solids fully written in Python. Currently, FEAPACK works with Python 3.12 on Windows x64, and it is available via pip. This guide presents tutorials on how to use the software.</p>
+            <h3 id="whatis">1.1. What is FEAPACK</h3>
+            <p>FEAPACK is an open-source Python package for performing linear perturbation analyses on solids via the finite element method, including static, frequency, and buckling analyses. Several finite elements are implemented, which can be applied in plane stress, plane strain, axisymmetric, and general three-dimensional cases. Distinct loading conditions can be modelled via the application of concentrated nodal loads, distributed surface loads (namely, pressures and surface tractions), and inertia loads (namely, body forces and accelerations, e.g., due to gravity). FEAPACK also has built-in capabilities for visualizing and interacting with finite element models and results.</p>
+            <p>Under the hood, FEAPACK utilizes efficient and well-established computational routines. It uses NumPy for general computations during the solution phase, but also Intel's Math Kernel Library for the solution of large sparse systems of equations, namely PARDISO and the Extended Eigensolver. FEAPACK also uses a custom approach for building and storing large sparse matrices arising from the finite element method, enabling their computation in parallel. However, FEAPACK for Python is not meant to be an extremely fast or efficient finite element package, as it is inherently limited by Python's performance. Instead, FEAPACK is meant to be easy to use for academic and research purposes, as the source code can easily be modified to explore and implement new approaches based on the finite element method.</p>
+            <p>The three main modules of FEAPACK are:</p>
+            <ul>
+                <li>
+                    <code>feapack.model</code> defines useful classes for creating a finite element model.
+                </li>
+                <li>
+                    <code>feapack.solver</code> defines the procedures used during the finite element analysis.
+                </li>
+                <li>
+                    <code>feapack.viewer</code> is a viewer application based on Qt and VTK used to analyze the results.
+                </li>
+            </ul>
+            <h3 id="whatisnot">1.2. What FEAPACK is not</h3>
+            <p>FEAPACK is not a mesh generator nor does it have built-in CAD capabilities and may not be used to define physical geometries nor to generate meshes. Instead, the physical geometry to be analyzed must first be discretized into a finite element mesh. Ultimately, this means that FEAPACK requires the finite element mesh as an input in order to create a new finite element model.</p>
+            <h3 id="meshfile">1.3. How to generate a mesh input file</h3>
+            <p>Currently, only Abaqus input files (*.inp) are accepted as mesh input files. In the future, support for other file types may be added. There are several ways to generate an Abaqus input file:</p>
+            <ol>
+                <li>
+                    For sufficiently simple meshes, the file may be created using a text editor or generated via a scripting language (e.g., Python or Matlab).
+                </li>
+                <li>
+                    For larger and more complex meshes, one may use Abaqus to define the physical geometry and then generate the mesh. This is not a particularly interesting way since Abaqus is paid software and the user may run a much more sophisticated finite element analysis directly in this software, nullifying the need for FEAPACK.
+                </li>
+                <li>
+                    The recommended way is to generate the finite element mesh via <a href="https://gmsh.info/">Gmsh</a> (or other mesh generator). Gmsh is freely available and open-source. Gmsh has a built-in CAD engine, so it can be used to define the physical geometry and then a mesh can be generated. However, Gmsh can also be used as a meshing tool only, leaving the task of defining the physical geometry to another CAD software (e.g., <a href="https://www.freecad.org/">FreeCAD</a>). Gmsh is capable of exporting the generated mesh as an Abaqus input file.
+                </li>
+            </ol>
+            <p>Alternatively, for sufficiently simple meshes, one may skip generating a mesh input file entirely and define the mesh (nodal coordinates and element connectivity) directly in the FEAPACK job script (see the first example below).</p>
+            <div class="separator"></div>
+            <h2 id="examples">2. Examples</h2>
+            <p>The following consists of a series of examples on how to use FEAPACK to perform finite element analyses. As previously stated, a mesh input file of the discretized physical geometry that is to be analyzed is often required. Based on this file, a model database (MDB) is created in a job script. The user may then first start by defining node sets, element sets, and surface sets. Node sets are used to apply concentrated nodal loads and boundary conditions in the form of prescribed nodal displacements. Element sets are used to define sections, which in turn assign materials and stress states to the finite elements, and to apply inertia loads in the form of body forces and accelerations (e.g., due to gravity). Finally, surface sets are used for the definition of distributed surface loads, i.e., pressures and surface tractions. Although node and element sets can be defined in the FEAPACK job script, it is often more convenient to define these during the meshing process, e.g., using Gmsh's physical groups. The sets are then automatically imported during the MDB creation.</p>
+            <p><b>Important:</b> before starting the MDB definition, always remember that FEAPACK, like many other finite element applications (e.g., Abaqus), assumes that a consistent system of units is being used. For each example, the units that are being considered are stated in the beginning.</p>
+            <p>Once a finite element model has been defined in the job script, e.g., <code>my_job.py</code>, the following command can be used to perform the finite element analysis: <code>python my_job.py</code>. Upon a successful run, the command <code>python -m feapack.viewer</code> can be used to launch the viewer application. The results are stored in the generated <code>my_job.out</code> file.</p>
+            <p>The files for the examples can be found <a href="https://github.com/carlos-souto/FEAPACK/tree/master/docs/examples">here</a>.</p>
+            <h3 id="basicexamples">2.1. Basic examples</h3>
+            <ul id="basic-example-list"></ul>
+            <h3 id="advancedexamples">2.2. Advanced examples</h3>
+            <ul id="advanced-example-list"></ul>
+        </div>
+    </body>
+</html>

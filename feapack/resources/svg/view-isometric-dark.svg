@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <style>.dark-blue{fill: #004080; opacity: 1.0;}.light-gray-and-dark-blue{fill: #6E8EAE; opacity: 1.0;}.light-blue{fill: #80C0FF; opacity: 1.0;}.cls-1{opacity: 0.8;}</style>
+  </defs>
+  <g class="cls-1">
+    <path class="dark-blue" d="M8,8v6.351L2.5,11.175V4.825Z" />
+    <path class="dark-blue" d="M13.5,4.4,8,7.571,2.5,4.4,8,1.22Z" />
+    <path class="dark-blue" d="M13.5,4.825v6.35L8,14.351V8Z" />
+    <path class="light-gray-and-dark-blue" d="M8.25,8.433l-5.5,3.175-.5-.866,5.5-3.175Z" />
+    <path class="light-gray-and-dark-blue" d="M8.5,1.22V7.571h-1V1.22Z" />
+    <path class="light-gray-and-dark-blue" d="M13.75,10.742l-.5.866L7.75,8.433l.5-.866Z" />
+    <path class="light-blue" d="M7.75,14.784l-5.5-3.176L2,11.175V4.825l.75-.433,5.5,3.175L8.5,8v6.351ZM3,10.887l4.5,2.6V8.289L3,5.691Z" />
+    <path class="light-blue" d="M8.25,8h-.5L2.25,4.829V3.962L7.75.787h.5l5.5,3.175v.867ZM3.5,4.4,8,6.994l4.5-2.6L8,1.8Z" />
+    <path class="light-blue" d="M8.25,14.784l-.75-.433V8l.25-.433,5.5-3.175.75.433v6.35l-.25.433Zm.25-6.5v5.2l4.5-2.6v-5.2Z" />
+  </g>
+</svg>

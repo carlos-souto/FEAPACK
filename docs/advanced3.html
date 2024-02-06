@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>FEAPACK Advanced Example #3</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="listexamples.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    </head>
+    <body>
+        <nav id="navbar" class="navbar">
+            <a href="index.html">Home</a>
+            <a href="guide.html">Quick Start Guide</a>
+            <div class="dropdown">
+                <button class="dropdown-button">Examples ↴</button>
+                <div id="dropdown-examples" class="dropdown-content"></div>
+            </div>
+        </nav>
+        <div class="content">
+            <h1>FEAPACK Examples</h1>
+            <h2>Advanced example #3: Stress intensity factors via VCCT.</h2>
+            <p>In this example, we will use FEAPACK to perform several finite element analyses considering a compact tension (CT) specimen with multiple crack lengths. The objective is to compute the stress intensity factor (mode I) for each of the considered crack lengths. To this end, the virtual crack closure technique (VCCT) is used. Additionally, Gmsh is used to model the geometry and to generate the finite element mesh.</p>
+            <p>The geometry of the CT specimen is as follows (more information in the <a href="https://doi.org/10.1520/E0647">ASTM E647</a> standard):</p>
+            <img srcset="resources/advanced3_1.svg 1.25x">
+            <p><small><small><a href="https://commons.wikimedia.org/wiki/File:CompactTensionSpecimen.svg">Bbanerje</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY-SA 3.0</a>, via Wikimedia Commons</small></small></p>
+            <p>The FEAPACK files for this example can be found <a href="https://github.com/carlos-souto/FEAPACK/tree/master/docs/examples/advanced3">here</a>.</p>
+            <p><b>Note 1:</b> this example requires <a href="https://gmsh.info/">Gmsh</a> for Python, which is not bundled with FEAPACK. To install Gmsh run: <code>pip install gmsh</code>.</p>
+            <p><b>Note 2:</b> this example requires <a href="https://matplotlib.org/">Matplotlib</a> for Python, which is not bundled with FEAPACK. To install Matplotlib run: <code>pip install matplotlib</code>.</p>
+            <p><b>Note 3:</b> this example may take a long time to run.</p>
+            <div class="separator"></div>
+            <h2>Solution via Gmsh and FEAPACK:</h2>
+            <p>Start by creating a job script named <code>advanced3.py</code> and import the following modules:</p>
+            <pre class="prettyprint linenums:1"><code class="language-py">import math
+import gmsh
+import feapack.gmsh
+import feapack.model
+import feapack.solver
+            </code></pre>
+            <p>We can then parameterize the script in order to make it easier to change the considered parameters, such as the geometry of the CT specimen.</p>
+            <pre class="prettyprint linenums:7"><code class="language-py">#-----------------------------------------------------------
+# PARAMETERS
+#-----------------------------------------------------------
+
+# geometry
+W     = 45.0 # mm  | effective width
+B     =  4.0 # mm  | thickness
+an    =  9.0 # mm  | notch
+p     =  2.0 # mm  | precrack
+h     =  1.5 # mm  | envelope height
+alpha = 30.0 # deg | envelope angle
+
+# mesh
+globalSeed           = 2.0
+crackSeed            = 0.1
+smoothingIterations  = 4
+refinementIterations = 2
+useQuads             = False
+reducedIntegration   = False
+
+# material and load
+E  = 210000.0 # MPa | Young's modulus
+nu = 0.3      # ... | Poisson's ratio
+P  = 2000.0   # N   | load magnitude
+
+# analysis
+step = 150 # number of nodes to release in each iteration
+
+# geometry checks (ASTM)
+if not W >= 25.0:               raise ValueError('ASTM recommendation: W >= 25 mm')
+if not W/20.0 <= B <= W/4.0:    raise ValueError('ASTM recommendation: W/20 <= B <= W/4')
+if not an >= 0.2*W:             raise ValueError('ASTM recommendation: an >= 0.2W')
+if not h <= W/16.0:             raise ValueError('ASTM recommendation: h <= W/16')
+if not p >= max(0.1*B, h, 1.0): raise ValueError('ASTM recommendation: p >= max(0.1B, h, 1 mm)')
+if not alpha <= 30.0:           raise ValueError('ASTM recommendation: alpha <= 30 deg')
+            </code></pre>
+            <p>Then, to define the geometry and mesh of the CT specimen, Gmsh is used, as shown below:</p>
+            <pre class="prettyprint linenums:43"><code class="language-py">#-----------------------------------------------------------
+# CREATING THE MESH WITH GMSH
+#-----------------------------------------------------------
+
+# initialize Gmsh
+gmsh.initialize()
+
+# point coordinates
+d = 0.25*W
+a0 = an + p
+outlineCoords = (
+    (                                      0.0,   0.0), # 0
+    (                                        p,   0.0), # 1
+    (h/(2.0*math.tan(math.radians(alpha/2.0))), h/2.0), # 2
+    (                              a0 + 0.25*W, h/2.0), # 3
+    (                              a0 + 0.25*W, 0.6*W), # 4
+    (                                   a0 - W, 0.6*W), # 5
+    (                                   a0 - W,   0.0), # 6
+)
+holeCoords = (
+    (        a0, 0.275*W),
+    (a0 + d/2.0, 0.275*W),
+    (a0 - d/2.0, 0.275*W),
+)
+
+# points
+outlinePoints = [gmsh.model.geo.addPoint(x, y, 0.0, globalSeed) for x, y in outlineCoords]
+holePoints = [gmsh.model.geo.addPoint(x, y, 0.0, globalSeed) for x, y in holeCoords]
+
+# curves
+outlineCurves = [gmsh.model.geo.addLine(outlinePoints[i], outlinePoints[i + 1]) for i in range(len(outlinePoints) - 1)] + \
+    [gmsh.model.geo.addLine(outlinePoints[-1], outlinePoints[0])]
+holeCurves = [
+    gmsh.model.geo.addCircleArc(holePoints[1], holePoints[0], holePoints[2]),
+    gmsh.model.geo.addCircleArc(holePoints[2], holePoints[0], holePoints[1]),
+]
+
+# curve loops
+outlineLoop = gmsh.model.geo.addCurveLoop(outlineCurves)
+holeLoop = gmsh.model.geo.addCurveLoop(holeCurves)
+
+# surface
+surface = gmsh.model.geo.addPlaneSurface([outlineLoop, holeLoop])
+
+# geometry done
+gmsh.model.geo.synchronize()
+
+# create Gmsh physical groups that will become FEAPACK sets
+# by default, Gmsh only saves elements associated with a physical group
+# hence, a physical group specifying the domain is generally required
+gmsh.model.addPhysicalGroup(2, [surface], name='PG-DOMAIN')          # contains the whole domain (a 2D surface)
+gmsh.model.addPhysicalGroup(1, holeCurves, name='PG-HOLE')           # contains the hole edges (1D curves)
+gmsh.model.addPhysicalGroup(1, [outlineCurves[-1]], name='PG-CRACK') # contains the crack path (a 1D curve)
+gmsh.model.addPhysicalGroup(0, [outlinePoints[-1]], name='PG-FIXED') # contains the final crack path node (a 0D point)
+
+# transfinite curves
+gmsh.model.mesh.setTransfiniteCurve(outlineCurves[0], round(p/crackSeed))
+gmsh.model.mesh.setTransfiniteCurve(outlineCurves[-1], round((W - a0)/crackSeed))
+
+# generate and smooth 2D mesh
+gmsh.model.mesh.generate(2)
+gmsh.model.mesh.optimize(method='Laplace2D', niter=smoothingIterations)
+
+# refine mesh
+for _ in range(refinementIterations):
+    gmsh.model.mesh.refine()
+    gmsh.model.mesh.optimize(method='Laplace2D', niter=smoothingIterations)
+
+# recombine mesh
+if useQuads:
+    gmsh.model.mesh.recombine()
+
+# if you want to view the mesh now, uncomment the following line
+# gmsh.fltk.run()
+
+# write mesh to file
+gmsh.option.setNumber('Mesh.SaveAll', False)          # default (also works with True, but more unused elements are saved)
+gmsh.option.setNumber('Mesh.SaveGroupsOfNodes', True) # to save node sets
+gmsh.write('advanced3.inp')
+
+# finalize Gmsh
+gmsh.finalize()
+            </code></pre>
+            <p>The following mesh is generated and saved to <code>advanced3.inp</code>:</p>
+            <img srcset="resources/advanced3_2.png 1.5x">
+            <img srcset="resources/advanced3_3.png 1.5x">
+            <p>Notice that only half the geometry is modelled, which is possible due to a symmetry boundary condition. Additionally, a plane stress condition is assumed.</p>
+            <p>Using FEAPACK, we can then create the finite element model as usual:</p>
+            <pre class="prettyprint linenums:126"><code class="language-py">#-----------------------------------------------------------
+# FINITE ELEMENT ANALYSIS WITH FEAPACK
+#-----------------------------------------------------------
+
+# create model database (MDB)
+feapack.gmsh.clean('advanced3.inp') # required if inp file is generated by Gmsh
+mdb = feapack.model.MDB.fromFile('advanced3.inp')
+
+# print available sets
+print('Node sets:', *mdb.nodeSets.keys())       # Node sets: PG-FIXED PG-HOLE PG-CRACK PG-DOMAIN
+print('Element sets:', *mdb.elementSets.keys()) # Element sets: PG-DOMAIN
+
+# create surface set for load application
+mdb.surfaceSet(name='HOLE-SURFACE', surfaceNodes='PG-HOLE')
+
+# create material and section
+mdb.material(name='MATERIAL', young=E, poisson=nu)
+mdb.section(
+    name='SECTION',
+    region='PG-DOMAIN',
+    material='MATERIAL',
+    type=feapack.model.SectionTypes.PlaneStress, # or simply 'PlaneStress'
+    thickness=B,
+    reducedIntegration=reducedIntegration
+)
+
+# create load
+A = math.pi*d*B
+mdb.surfaceTraction(name='LOAD', region='HOLE-SURFACE', y=P/A)
+
+# boundary conditions
+mdb.boundaryCondition(name='X-LOCK', region='PG-FIXED', u=0.0)
+mdb.boundaryCondition(name='Y-LOCK', region='PG-CRACK', v=0.0)
+            </code></pre>
+            <p>If we were to submit the MDB as is to the solver, we would be considering an initial precrack only. However, the objective is to consider multiple crack lengths, ranging from an initial precrack to full separation. To this end, multiple cracks are modelled by freeing nodes from the Y-symmetry (<code>'Y-LOCK'</code>) boundary condition. This is easily accomplished by incrementally removing the appropriate nodes from the <code>'PG-CRACK'</code> node set within a loop, as shown:</p>
+            <pre class="prettyprint linenums:160"><code class="language-py"># solve multiple jobs
+# release crack nodes on each iteration
+jobCount = 0                                                                         # job counter
+crackNodes = [*mdb.nodeSets['PG-CRACK'].indices]                                     # unpack crack nodes into a list
+crackNodes.sort(key=lambda index: mdb.mesh.nodes[index].x)                           # sort nodes by their X coordinate
+crackTip = []                                                                        # crack tip
+crackLength = []                                                                     # crack length
+while len(crackNodes) > 0:                                                           # otherwise, full separation occurred
+    crackTip.append(crackNodes[-1])                                                  # save current crack tip node index
+    crackLength.append(a0 + abs(mdb.mesh.nodes[crackTip[-1]].x))                     # save current crack length
+    mdb.nodeSets['PG-CRACK'] = feapack.model.NodeSet(crackNodes)                     # replace existing node set (update crack)
+    feapack.solver.solve(mdb, analysis='static', jobName=f'advanced3_{jobCount:03}') # solve for current crack
+    crackNodes = crackNodes[:-step]                                                  # remove nodes from crack closure (release)
+    jobCount += 1                                                                    # increment job counter
+
+# merge relevant output frames into a single output file
+print('Merging output frames...')
+feapack.model.ODB.merge(
+    filePath='advanced3.out',
+    selection=[(f'advanced3_{i:03}.out', [1]) for i in range(jobCount)],
+    descriptions=[f'Step {i + 1}: Crack Length = {crackLength[i]:.3f}' for i in range(jobCount)],
+    deleteExisting=True
+)
+print('Done')
+            </code></pre>
+            <p>Once the simulations have been carried out, the virtual crack closure technique (VCCT) can be used to compute the stress intensity factors (mode I) for each crack length. The following code could even be placed in a separate post-processing script:</p>
+            <pre class="prettyprint linenums:185"><code class="language-py">#-----------------------------------------------------------
+# VIRTUAL CRACK CLOSURE TECHNIQUE
+#-----------------------------------------------------------
+import numpy as np
+import matplotlib.pyplot as plt
+print('VCCT post-processing...')
+
+# load results
+odb = feapack.model.ODB('advanced3.out', mode='read')
+odb.goToFirstFrame()
+Fy, Uy = [], []
+for i in range(jobCount):
+    Fy.append([*odb.getNodeOutputValues('Reaction Force>Reaction Force in Y')])
+    Uy.append([*odb.getNodeOutputValues('Displacement>Displacement in Y')])
+    odb.goToNextFrame()
+
+# compute stress intensity factors
+Ki = []
+for i in range(jobCount - 1):
+    da = crackLength[i + 1] - crackLength[i]
+    fy = Fy[i][crackTip[i]]
+    uy = Uy[i + 1][crackTip[i]]
+    Gi = -(2.0*uy*fy)/(2.0*da)
+    Ki.append(math.sqrt(Gi*E))
+
+# "analytical" solution
+a_ana = np.linspace(5.0, 40.0, 100)
+Ki_ana = P/B*math.sqrt(math.pi/W)*(
+        16.7*(a_ana/W)**(1/2) -
+    104.7*(a_ana/W)**(3/2) +
+    369.9*(a_ana/W)**(5/2) -
+    573.8*(a_ana/W)**(7/2) +
+    360.5*(a_ana/W)**(9/2)
+)
+
+# plot figure
+plt.figure()
+plt.xlabel('Crack Length [mm]')
+plt.ylabel(r'Stress Intensity Factor [MPa⋅mm$^\text{1/2}$]')
+plt.plot(crackLength[:-3], Ki[:-2], '-ok', label='VCCT')
+plt.plot(a_ana, Ki_ana, '-r', label='Analytical')
+plt.legend()
+plt.savefig('advanced3.png')
+print('Done')
+            </code></pre>
+            <p>The following plot is generated:</p>
+            <img src="resources/advanced3_4.png">
+            <p>From which the <a href="https://en.wikipedia.org/wiki/Compact_tension_specimen">"analytical" solution</a> is given by:</p>
+            <img src="resources/advanced3_5.svg">
+            <p>where:</p>
+            <ul>
+                <li><img src="resources/advanced3_6.svg"> is the applied load.</li>
+                <li><img src="resources/advanced3_7.svg"> is the thickness of the specimen.</li>
+                <li><img src="resources/advanced3_8.svg"> is the effective width of the specimen.</li>
+                <li><img src="resources/advanced3_9.svg"> is the crack length.</li>
+            </ul>
+            <p>Finally, the following animation can be made using the viewer application:</p>
+            <img src="resources/advanced3_10.gif">
+        </div>
+    </body>
+</html>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <style>.dark-gray{fill: #1E1E1E; opacity: 1.0;}.dark-gray-25{fill: #1E1E1E; opacity: 0.25;}.dark-gray-50{fill: #1E1E1E; opacity: 0.50;}.dark-gray-75{fill: #1E1E1E; opacity: 0.75;}.cls-1{opacity: 0.8;}</style>
+  </defs>
+  <g class="cls-1">
+    <path class="dark-gray-25" d="M14.5,7.5l-1.5,6H5.5l-4-6,5-6H13Z" />
+    <path class="dark-gray-50" d="M13.984,7.5l-1.2,4.782L12.066,13h-6.3L2.434,8h6.3L9.6,7.5l3.188-4.782Z" />
+    <path class="dark-gray-75" d="M2.434,8h6.3l3.334,5h-6.3Z" />
+    <path class="dark-gray" d="M13.485,1.379,13,1H6.5l-.384.18-5,6-.032.6,4,6L5.5,14H13l.485-.379,1.5-6V7.379ZM6.734,2h5.332L8.732,7H2.567Zm-4.3,6h6.3l3.334,5h-6.3Zm10.355,4.282L9.6,7.5l3.188-4.782,1.2,4.782Z" />
+  </g>
+</svg>

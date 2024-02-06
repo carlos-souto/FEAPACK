@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>FEAPACK Basic Example #2</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="listexamples.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    </head>
+    <body>
+        <nav id="navbar" class="navbar">
+            <a href="index.html">Home</a>
+            <a href="guide.html">Quick Start Guide</a>
+            <div class="dropdown">
+                <button class="dropdown-button">Examples ↴</button>
+                <div id="dropdown-examples" class="dropdown-content"></div>
+            </div>
+        </nav>
+        <div class="content">
+            <h1>FEAPACK Examples</h1>
+            <h2>Basic example #2: Plate with a central hole.</h2>
+            <p>Consider the following plate with a central hole:</p>
+            <img src="resources/basic2_1.png">
+            <p>The geometry of the plate is defined by a length of 200 mm, a width of 100 mm, and a thickness of 10 mm. The central hole is defined by a diameter of 40 mm. The plate is made of aluminum, which is considered elastic, homogeneous, and isotropic. The material is defined by a Young's modulus of 70 GPa and a Poisson's ration of 0.3. The applied tension has a magnitude of 250 MPa. The objective is to perform a static analysis in order to determine the stress concentration at the hole vicinity. A plane stress condition is assumed. Note: due to the plate symmetry, only 1/4 of the geometry needs to be modelled.</p>
+            <p>Consistent units: below, the geometry will be defined in mm, whereas the Young's modulus and applied tension are defined in MPa. Consequently, results are computed in N (forces), mm (displacements), mm/mm (strains), and MPa (stresses).</p>
+            <p>The FEAPACK files for this example can be found <a href="https://github.com/carlos-souto/FEAPACK/tree/master/docs/examples/basic2">here</a>.</p>
+            <div class="separator"></div>
+            <h2>Solution via FEAPACK:</h2>
+            <p>Start by creating a job script named <code>basic2.py</code> and import the modules shown below. In this example, we will run the solver in parallel mode. For multiprocessing, the main guard is required:</p>
+            <pre class="prettyprint linenums:1"><code class="language-py">import feapack.model
+import feapack.solver
+
+# main guard required for multiprocessing
+if __name__ == '__main__':
+            </code></pre>
+            <p>For this example, a finite element mesh has been prepared in <code>basic2.inp</code>:</p>
+            <img src="resources/basic2_2.png">
+            <p>Inside the main guard of the job script, the following loads this mesh into a new model database (MDB):</p>
+            <pre class="prettyprint linenums:7"><code class="language-py">    # create model database (MDB)
+    mdb = feapack.model.MDB.fromFile('basic2.inp')
+            </code></pre>
+            <p>The <code>basic2.inp</code> defines 2,017 nodes and 1,916 <code>CPS4</code> elements. The supported Abaqus element types are automatically converted into the comparable FEAPACK element types (in this case, the <code>CPS4</code> elements are converted into <code>Plane4</code> elements). Additionally, Abaqus stores the element connectivity using 1-based indexing, which is automatically converted into 0-based indexing, as required by FEAPACK.</p>
+            <p>Next, the following sets are created:</p>
+            <pre class="prettyprint linenums:10"><code class="language-py">    # create node sets
+    mdb.nodeSet(name='nodes at x=0', indices=(node.index for node in mdb.mesh.nodes if node.x == 0.0))
+    mdb.nodeSet(name='nodes at y=0', indices=(node.index for node in mdb.mesh.nodes if node.y == 0.0))
+    mdb.nodeSet(name='nodes at x=100', indices=(node.index for node in mdb.mesh.nodes if node.x == 100.0))
+
+    # create element set
+    mdb.elementSet(name='all elements', indices=range(mdb.mesh.elementCount))
+
+    # create surface set
+    mdb.surfaceSet(name='loaded surface', surfaceNodes='nodes at x=100')
+            </code></pre>
+            <p>The node sets <code>'nodes at x=0'</code> and <code>'nodes at y=0'</code> are used below to apply the boundary conditions arising from the symmetries along the x and y axes, respectively. The node set <code>'nodes at x=100'</code> is used to create the surface set 'loaded surface'. The element set <code>'all elements'</code> contains all elements and is used for the section assignments. Finally, the surface set <code>'loaded surface'</code> contains all element surfaces that form the loaded surface of the plate, and this set is used for the load application.</p>
+            <p>The next step is to define the material and section assignments:</p>
+            <pre class="prettyprint linenums:21"><code class="language-py">    # create material and section
+    mdb.material(name='aluminum', young=70000.0, poisson=0.3)
+    mdb.section(
+        name='aluminum section',
+        region='all elements',
+        material='aluminum',
+        type=feapack.model.SectionTypes.PlaneStress, # or simply 'PlaneStress'
+        thickness=10.0,
+        reducedIntegration=False
+    )
+            </code></pre>
+            <p>Then we define the load and boundary conditions:</p>
+            <pre class="prettyprint linenums:32"><code class="language-py">    # create load
+    mdb.surfaceTraction(name='applied tension', region='loaded surface', x=250.0)
+
+    # boundary conditions
+    mdb.boundaryCondition(name='x symmetry', region='nodes at x=0', u=0.0)
+    mdb.boundaryCondition(name='y symmetry', region='nodes at y=0', v=0.0)
+            </code></pre>
+            <p>Finally, we call the solver, still within the main guard:</p>
+            <pre class="prettyprint linenums:39"><code class="language-py">    # call solver inside main guard for multiprocessing
+    # specifying processes > 1 will enable parallel mode
+    feapack.solver.solve(mdb, analysis='static', processes=4)
+            </code></pre>
+            <p>To actually perform the finite element analysis, the following command is used: <code>python basic2.py</code>. The file <code>basic2.out</code> will be generated upon a successful run. Then, the viewer application can be launched using the following command: <code>python -m feapack.viewer</code>.</p>
+            <p>Animated results generated using the viewer application:</p>
+            <img src="resources/basic2_3.gif">
+            <p>As a form of validation, here are the results from FEAPACK vs. Abaqus using the comparable <code>CPS4</code> element:</p>
+            <img src="resources/basic2_4.png">
+            <p><i>FEAPACK</i></p>
+            <img src="resources/basic2_5.png">
+            <p><i>Abaqus</i></p>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>FEAPACK Basic Example #5</title>
+        <link rel="stylesheet" href="styles.css">
+        <script src="listexamples.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    </head>
+    <body>
+        <nav id="navbar" class="navbar">
+            <a href="index.html">Home</a>
+            <a href="guide.html">Quick Start Guide</a>
+            <div class="dropdown">
+                <button class="dropdown-button">Examples ↴</button>
+                <div id="dropdown-examples" class="dropdown-content"></div>
+            </div>
+        </nav>
+        <div class="content">
+            <h1>FEAPACK Examples</h1>
+            <h2>Basic example #5: Buckling of a slender bar.</h2>
+            <p>Consider the following bar under compression:</p>
+            <img src="resources/basic5_1.png">
+            <p>The geometry of the bar is defined by a height of 1 m and a square cross-section with a side length of 40 mm. The material (steel) is considered elastic, homogeneous, and isotropic, defined by a Young's modulus of 210 GPa and a Poisson's ration of 0.3. The bar is fixed on one end, while the other is subjected to a compressive surface load. The objective is to perform a buckling analysis in order to obtain the bar's buckling modes and corresponding critical loads for the considered load pattern. As the buckling analysis returns load multipliers, the applied load has a magnitude σ of 1 MPa. A plane stress condition is assumed.</p>
+            <p>Consistent units: below, the geometry will be defined in mm, whereas the Young's modulus and load magnitude are defined in MPa. Consequently, displacements are computed in mm.</p>
+            <p>The FEAPACK files for this example can be found <a href="https://github.com/carlos-souto/FEAPACK/tree/master/docs/examples/basic5">here</a>.</p>
+            <div class="separator"></div>
+            <h2>Solution via FEAPACK:</h2>
+            <p>Start by creating a job script named <code>basic5.py</code> and import the following modules:</p>
+            <pre class="prettyprint linenums:1"><code class="language-py">import feapack.model
+import feapack.solver
+            </code></pre>
+            <p>For this example, a finite element mesh has been prepared in <code>basic5.inp</code>:</p>
+            <img src="resources/basic5_2.png">
+            <p>The <code>basic5.inp</code> file defines 325 nodes and 80 <code>CPS8</code> elements. The supported Abaqus element types are automatically converted into the comparable FEAPACK element types (in this case, the <code>CPS8</code> elements are converted into <code>Plane8</code> elements). Additionally, Abaqus stores the element connectivity using 1-based indexing, which is automatically converted into 0-based indexing, as required by FEAPACK.</p>
+            <p>We can then load the mesh onto a new model database (MDB):</p>
+            <pre class="prettyprint linenums:4"><code class="language-py"># create model database (MDB)
+mdb = feapack.model.MDB.fromFile('basic5.inp')
+            </code></pre>
+            <p>Next, the following sets can be created:</p>
+            <pre class="prettyprint linenums:7"><code class="language-py"># create node sets
+mdb.nodeSet(name='nodes at y = 0', indices=(node.index for node in mdb.mesh.nodes if node.y == 0.0))
+mdb.nodeSet(name='nodes at y = 1000', indices=(node.index for node in mdb.mesh.nodes if node.y == 1000.0))
+
+# create element set
+mdb.elementSet(name='all elements', indices=range(mdb.mesh.elementCount))
+
+# create surface set
+mdb.surfaceSet(name='top surface', surfaceNodes='nodes at y = 1000')
+            </code></pre>
+            <p>The node set <code>'nodes at y = 0'</code> contains the base nodes and is used later to apply the boundary condition. The node set <code>'nodes at y = 1000'</code> contains the top nodes and is used to create the surface set <code>'top surface'</code>, which in turn contains the element surfaces defining the top surface of the bar and is used for the load application. Finally, the element set <code>'all elements'</code> is used for the section assignments.</p>
+            <p>The material and section are defined as follows:</p>
+            <pre class="prettyprint linenums:17"><code class="language-py"># create material and section
+mdb.material(name='steel', young=210000.0, poisson=0.3)
+mdb.section(
+    name='steel section',
+    region='all elements',
+    material='steel',
+    type=feapack.model.SectionTypes.PlaneStress, # or simply 'PlaneStress'
+    reducedIntegration=False
+)
+            </code></pre>
+            <p>We then define the load pattern and the boundary condition:</p>
+            <pre class="prettyprint linenums:27"><code class="language-py"># create load
+mdb.pressure(name='unit pressure', region='top surface', magnitude=1.0)
+
+# create boundary condition
+mdb.boundaryCondition(name='fixed base', region='nodes at y = 0', u=0.0, v=0.0)
+            </code></pre>
+            <p>Finally, we call the solver while specifying the requested number of buckling modes:</p>
+            <pre class="prettyprint linenums:33"><code class="language-py"># call solver
+# k0 specifies the requested number of eigenvalues and corresponding eigenvectors
+feapack.solver.solve(mdb, analysis='buckling', k0=10)
+            </code></pre>
+            <p>To actually perform the finite element analysis, the following command is used: <code>python basic5.py</code>. The file <code>basic5.out</code> will be generated upon a successful run. Then, the viewer application can be launched using the following command: <code>python -m feapack.viewer</code>.</p>
+            <p>Animated results generated using the viewer application:</p>
+            <img src="resources/basic5_3.gif">
+            <p>Note: buckling shapes are normalized with respect to the infinity norm of the eigenvector.</p>
+            <p>As a form of validation, consider <a href="https://en.wikipedia.org/wiki/Euler%27s_critical_load">Euler's critical load formula</a>:</p>
+            <img src="resources/Euler_critical_load.svg">
+            <p>where:</p>
+            <ul>
+                <li><img src="resources/Euler_critical_load_1.svg"> is the Euler's critical load (force).</li>
+                <li><img src="resources/Euler_critical_load_2.svg"> is the Young's modulus of the material.</li>
+                <li><img src="resources/Euler_critical_load_3.svg"> is the second area moment of the cross section.</li>
+                <li><img src="resources/Euler_critical_load_4.svg"> is the length of unsupported material.</li>
+                <li><img src="resources/Euler_critical_load_5.svg"> is an effective length factor.</li>
+            </ul>
+            <p>For the current example of a fixed-free bar, the effective length factor has a theoretical value of 2, resulting in a critical load of 110,539.6 N, which, in terms of an applied surface load and considering the current cross-sectional area, corresponds to 69.09 MPa. As seen in the animation above, FEAPACK reports an eigenvalue of 69.06 for the first buckling mode, which is to be understood as a load multiplier. As an applied load of 1 MPa was modelled, the critical load determined by the buckling analysis is 69.06×1 MPa, which is very close to the analytical solution.</p>
+        </div>
+    </body>
+</html>

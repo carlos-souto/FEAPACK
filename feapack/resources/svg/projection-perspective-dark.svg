@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+  <style>.dark-gray{fill: #1E1E1E; opacity: 1.0;}.light-gray{fill: #DCDCDC; opacity: 1.0;}.cls-1{opacity: 0.8;}</style>
+  </defs>
+  <g class="cls-1">
+    <path class="dark-gray" d="M10.5,7.5v7h-9v-7Z" />
+    <path class="dark-gray" d="M1.5,14.5v-7l8-6h5v4l-4,9Z" />
+    <path class="light-gray" d="M14.5,1h-5l-.3.1-8,6L1,7.5v7l.5.5h9l.457-.3,4-9L15,1.5ZM10,14H2V8h8ZM3,7,9.667,2h3.9L10.232,7ZM14,5.394l-3,6.75V7.651l3-4.5Z" />
+  </g>
+</svg>

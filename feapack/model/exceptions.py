@@ -1,0 +1,3 @@
+class MissingFrameError(Exception):
+    """To be raised by an ODB object when the requested frame is not found in the output file."""
+    ...

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <style>.dark-gray{fill: #1E1E1E; opacity: 1.0;}.light-gray{fill: #DCDCDC; opacity: 1.0;}.dark-green{fill: #008000; opacity: 1.0;}.cls-1{opacity: 0.8;}</style>
+  </defs>
+  <g class="cls-1">
+    <path class="light-gray" d="M14.5,5v8H1.5V8.3L7.266,5Z" />
+    <path class="light-gray" d="M14,3V5H7.266l1.75-1L7.266,3Z" />
+    <path class="dark-gray" d="M15,5.5v8l-.5.5H1.5L1,13.5V8.581l1-.572V13H14V6H5.516l1.75-1H14.5Z" />
+    <path class="dark-gray" d="M15,2.5v3l-.5.5H5.516l1.75-1H14V3H7.266L5.516,2H14.5Z" />
+    <path class="dark-green" d="M0,0,7,4,0,8Z" />
+  </g>
+</svg>

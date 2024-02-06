@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <style>.light-gray{fill: #DCDCDC; opacity: 1.0;}.dark-gray{fill: #1E1E1E; opacity: 1.0;}.light-blue{fill: #80C0FF; opacity: 1.0;}.dark-blue{fill: #004080; opacity: 1.0;}.dark-gray-and-light-blue{fill: #4F6F8F; opacity: 1.0;}.cls-1{opacity: 0.8;}</style>
+  </defs>
+  <g class="cls-1">
+    <path class="light-gray" d="M13.5,4.82v6.36L8,14.35V8L2.5,4.82,8,1.65Z" />
+    <path class="dark-gray" d="M2.5,4.82,8,8v6.35l-.25.43h.5l5.5-3.17.25-.43V4.82l-.25-.43L8.25,1.22h-.5L2.25,4.39,2,4.82Zm5,2.31-4-2.31,4-2.31ZM13,5.69v4.62L9,8ZM8.5,7.13V2.51l4,2.31Zm0,1.74,4,2.31-4,2.31Z" />
+    <path class="light-blue" d="M8,8v6.351L2.5,11.175V4.825Z" />
+    <path class="dark-gray-and-light-blue" d="M8.25,8.433l-5.5,3.175-.5-.866,5.5-3.175Z" />
+    <path class="dark-blue" d="M7.75,14.784l-5.5-3.176L2,11.175V4.825l.75-.433,5.5,3.175L8.5,8v6.351ZM3,10.887l4.5,2.6V8.289L3,5.691Z" />
+  </g>
+</svg>

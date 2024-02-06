@@ -1,0 +1,31 @@
+# ignore all files...
+*.*
+
+# ... except these:
+
+# .gitignore file
+!.gitignore
+
+# .gitattributes file
+!.gitattributes
+
+# python source files
+!*.py
+
+# html source files
+!*.html
+
+# javascript source files
+!*.js
+
+# css source files
+!*.css
+
+# Abaqus input files
+!*.inp
+
+# resources
+!*.ico
+!*.svg
+!*.png
+!*.gif
