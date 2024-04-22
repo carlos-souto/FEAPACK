@@ -12,6 +12,7 @@ const advanced = [
     ["advanced1.html", "Advanced example #1: Creating a mesh with Gmsh and importing it into FEAPACK." ],
     ["advanced2.html", "Advanced example #2: Incremental mesh refinement and mesh dependency analysis."],
     ["advanced3.html", "Advanced example #3: Stress intensity factors via VCCT."                       ],
+    ["advanced4.html", "Advanced example #4: Fatigue crack propagation via VCEM."                      ],
 ];
 
 /* Lists the examples in the page. */

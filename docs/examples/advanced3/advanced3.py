@@ -12,25 +12,14 @@ import feapack.solver
 W     = 45.0 # mm  | effective width
 B     =  4.0 # mm  | thickness
 an    =  9.0 # mm  | notch
-p     =  2.0 # mm  | precrack
+p     =  2.0 # mm  | pre-crack
 h     =  1.5 # mm  | envelope height
 alpha = 30.0 # deg | envelope angle
-
-# mesh
-globalSeed           = 2.0
-crackSeed            = 0.1
-smoothingIterations  = 4
-refinementIterations = 2
-useQuads             = False
-reducedIntegration   = False
 
 # material and load
 E  = 210000.0 # MPa | Young's modulus
 nu = 0.3      # ... | Poisson's ratio
 P  = 2000.0   # N   | load magnitude
-
-# analysis
-step = 150 # number of nodes to release in each iteration
 
 # geometry checks (ASTM)
 if not W >= 25.0:               raise ValueError('ASTM recommendation: W >= 25 mm')
@@ -47,42 +36,72 @@ if not alpha <= 30.0:           raise ValueError('ASTM recommendation: alpha <= 
 # initialize Gmsh
 gmsh.initialize()
 
-# point coordinates
-d = 0.25*W
-a0 = an + p
-outlineCoords = (
-    (                                      0.0,   0.0), # 0
-    (                                        p,   0.0), # 1
-    (h/(2.0*math.tan(math.radians(alpha/2.0))), h/2.0), # 2
-    (                              a0 + 0.25*W, h/2.0), # 3
-    (                              a0 + 0.25*W, 0.6*W), # 4
-    (                                   a0 - W, 0.6*W), # 5
-    (                                   a0 - W,   0.0), # 6
-)
-holeCoords = (
-    (        a0, 0.275*W),
-    (a0 + d/2.0, 0.275*W),
-    (a0 - d/2.0, 0.275*W),
-)
-
 # points
-outlinePoints = [gmsh.model.geo.addPoint(x, y, 0.0, globalSeed) for x, y in outlineCoords]
-holePoints = [gmsh.model.geo.addPoint(x, y, 0.0, globalSeed) for x, y in holeCoords]
+a0 = an + p
+r = 0.25*W/2.0
+gmsh.model.geo.addPoint(0.0, 0.0, 0.0)                                                                # 1
+gmsh.model.geo.addPoint(p, 0.0, 0.0)                                                                  # 2
+gmsh.model.geo.addPoint(h/(2.0*math.tan(math.radians(alpha/2.0))), h/2.0, 0.0)                        # 3
+gmsh.model.geo.addPoint(a0 + 0.25*W, h/2.0, 0.0)                                                      # 4
+gmsh.model.geo.addPoint(a0 + 0.25*W, 0.6*W, 0.0)                                                      # 5
+gmsh.model.geo.addPoint(h/(2.0*math.tan(math.radians(alpha/2.0))), 0.6*W, 0.0)                        # 6
+gmsh.model.geo.addPoint(p, 0.6*W, 0.0)                                                                # 7
+gmsh.model.geo.addPoint(0.0, 0.6*W, 0.0)                                                              # 8
+gmsh.model.geo.addPoint(a0 - W, 0.6*W, 0.0)                                                           # 9
+gmsh.model.geo.addPoint(a0 - W, h/2.0, 0.0)                                                           # 10
+gmsh.model.geo.addPoint(a0 - W, 0.0, 0.0)                                                             # 11
+gmsh.model.geo.addPoint(0.0, h/2.0, 0.0)                                                              # 12
+gmsh.model.geo.addPoint(p, h/2.0, 0.0)                                                                # 13
+gmsh.model.geo.addPoint(a0, 0.275*W, 0.0)                                                             # 14
+gmsh.model.geo.addPoint(a0 + r*math.cos(math.pi/4.0), 0.275*W + r*math.sin(math.pi/4.0), 0.0)         # 15
+gmsh.model.geo.addPoint(a0 + r*math.cos(3.0*math.pi/4.0), 0.275*W + r*math.sin(3.0*math.pi/4.0), 0.0) # 16
+gmsh.model.geo.addPoint(a0 + r*math.cos(5.0*math.pi/4.0), 0.275*W + r*math.sin(5.0*math.pi/4.0), 0.0) # 17
+gmsh.model.geo.addPoint(a0 + r*math.cos(7.0*math.pi/4.0), 0.275*W + r*math.sin(7.0*math.pi/4.0), 0.0) # 18
 
 # curves
-outlineCurves = [gmsh.model.geo.addLine(outlinePoints[i], outlinePoints[i + 1]) for i in range(len(outlinePoints) - 1)] + \
-    [gmsh.model.geo.addLine(outlinePoints[-1], outlinePoints[0])]
-holeCurves = [
-    gmsh.model.geo.addCircleArc(holePoints[1], holePoints[0], holePoints[2]),
-    gmsh.model.geo.addCircleArc(holePoints[2], holePoints[0], holePoints[1]),
-]
+gmsh.model.geo.addLine(1, 2)            # 1
+gmsh.model.geo.addLine(2, 3)            # 2
+gmsh.model.geo.addLine(3, 4)            # 3
+gmsh.model.geo.addLine(4, 5)            # 4
+gmsh.model.geo.addLine(5, 6)            # 5
+gmsh.model.geo.addLine(6, 7)            # 6
+gmsh.model.geo.addLine(7, 8)            # 7
+gmsh.model.geo.addLine(8, 9)            # 8
+gmsh.model.geo.addLine(9, 10)           # 9
+gmsh.model.geo.addLine(10, 11)          # 10
+gmsh.model.geo.addLine(11, 1)           # 11
+gmsh.model.geo.addLine(1, 12)           # 12
+gmsh.model.geo.addLine(12, 8)           # 13
+gmsh.model.geo.addLine(2, 13)           # 14
+gmsh.model.geo.addLine(13, 7)           # 15
+gmsh.model.geo.addLine(10, 12)          # 16
+gmsh.model.geo.addLine(12, 13)          # 17
+gmsh.model.geo.addLine(13, 3)           # 18
+gmsh.model.geo.addLine(3, 6)            # 19
+gmsh.model.geo.addCircleArc(15, 14, 16) # 20
+gmsh.model.geo.addCircleArc(16, 14, 17) # 21
+gmsh.model.geo.addCircleArc(17, 14, 18) # 22
+gmsh.model.geo.addCircleArc(18, 14, 15) # 23
+gmsh.model.geo.addLine(3, 17)           # 24
+gmsh.model.geo.addLine(6, 16)           # 25
+gmsh.model.geo.addLine(5, 15)           # 26
+gmsh.model.geo.addLine(4, 18)           # 27
 
 # curve loops
-outlineLoop = gmsh.model.geo.addCurveLoop(outlineCurves)
-holeLoop = gmsh.model.geo.addCurveLoop(holeCurves)
+gmsh.model.geo.addCurveLoop([11, 12, -16, 10])   # 1
+gmsh.model.geo.addCurveLoop([1, 14, -17, -12])   # 2
+gmsh.model.geo.addCurveLoop([2, -18, -14])       # 3
+gmsh.model.geo.addCurveLoop([9, 16, 13, 8])      # 4
+gmsh.model.geo.addCurveLoop([13, -7, -15, -17])  # 5
+gmsh.model.geo.addCurveLoop([18, 19, 6, -15])    # 6
+gmsh.model.geo.addCurveLoop([24, -21, -25, -19]) # 7
+gmsh.model.geo.addCurveLoop([24, 22, -27, -3])   # 8
+gmsh.model.geo.addCurveLoop([27, 23, -26, -4])   # 9
+gmsh.model.geo.addCurveLoop([5, 25, -20, -26])   # 10
 
-# surface
-surface = gmsh.model.geo.addPlaneSurface([outlineLoop, holeLoop])
+# surfaces
+for i in range(1, 11):
+    gmsh.model.geo.addPlaneSurface([i])
 
 # geometry done
 gmsh.model.geo.synchronize()
@@ -90,27 +109,23 @@ gmsh.model.geo.synchronize()
 # create Gmsh physical groups that will become FEAPACK sets
 # by default, Gmsh only saves elements associated with a physical group
 # hence, a physical group specifying the domain is generally required
-gmsh.model.addPhysicalGroup(2, [surface], name='PG-DOMAIN')          # contains the whole domain (a 2D surface)
-gmsh.model.addPhysicalGroup(1, holeCurves, name='PG-HOLE')           # contains the hole edges (1D curves)
-gmsh.model.addPhysicalGroup(1, [outlineCurves[-1]], name='PG-CRACK') # contains the crack path (a 1D curve)
-gmsh.model.addPhysicalGroup(0, [outlinePoints[-1]], name='PG-FIXED') # contains the final crack path node (a 0D point)
+gmsh.model.addPhysicalGroup(2, [*range(1, 11)], name='PG-DOMAIN') # contains the whole domain (2D surfaces)
+gmsh.model.addPhysicalGroup(1, [20, 21, 22, 23], name='PG-HOLE')  # contains the hole edges (1D curves)
+gmsh.model.addPhysicalGroup(1, [11], name='PG-CRACK')             # contains the crack path (a 1D curve)
+gmsh.model.addPhysicalGroup(0, [11], name='PG-FIXED')             # contains the final crack path node (a 0D point)
 
-# transfinite curves
-gmsh.model.mesh.setTransfiniteCurve(outlineCurves[0], round(p/crackSeed))
-gmsh.model.mesh.setTransfiniteCurve(outlineCurves[-1], round((W - a0)/crackSeed))
+# transfinite options
+for i in range(1, 28):
+    if i in (8, 11, 16): n = 50
+    else: n = 10
+    gmsh.model.mesh.setTransfiniteCurve(i, n)
+for i in range(1, 11):
+    if i == 3: continue
+    gmsh.model.mesh.setTransfiniteSurface(i)
 
-# generate and smooth 2D mesh
+# generate and recombine 2D mesh
 gmsh.model.mesh.generate(2)
-gmsh.model.mesh.optimize(method='Laplace2D', niter=smoothingIterations)
-
-# refine mesh
-for _ in range(refinementIterations):
-    gmsh.model.mesh.refine()
-    gmsh.model.mesh.optimize(method='Laplace2D', niter=smoothingIterations)
-
-# recombine mesh
-if useQuads:
-    gmsh.model.mesh.recombine()
+gmsh.model.mesh.recombine()
 
 # if you want to view the mesh now, uncomment the following line
 # gmsh.fltk.run()
@@ -146,11 +161,11 @@ mdb.section(
     material='MATERIAL',
     type=feapack.model.SectionTypes.PlaneStress, # or simply 'PlaneStress'
     thickness=B,
-    reducedIntegration=reducedIntegration
+    reducedIntegration=False
 )
 
 # create load
-A = math.pi*d*B
+A = 2.0*math.pi*r*B
 mdb.surfaceTraction(name='LOAD', region='HOLE-SURFACE', y=P/A)
 
 # boundary conditions
@@ -164,12 +179,12 @@ crackNodes = [*mdb.nodeSets['PG-CRACK'].indices]                                
 crackNodes.sort(key=lambda index: mdb.mesh.nodes[index].x)                           # sort nodes by their X coordinate
 crackTip = []                                                                        # crack tip
 crackLength = []                                                                     # crack length
-while len(crackNodes) > 0:                                                           # otherwise, full separation occurred
+while len(crackNodes) > 10:                                                          # termination criterion
     crackTip.append(crackNodes[-1])                                                  # save current crack tip node index
     crackLength.append(a0 + abs(mdb.mesh.nodes[crackTip[-1]].x))                     # save current crack length
     mdb.nodeSets['PG-CRACK'] = feapack.model.NodeSet(crackNodes)                     # replace existing node set (update crack)
     feapack.solver.solve(mdb, analysis='static', jobName=f'advanced3_{jobCount:03}') # solve for current crack
-    crackNodes = crackNodes[:-step]                                                  # remove nodes from crack closure (release)
+    crackNodes = crackNodes[:-1]                                                     # remove node from crack closure (release)
     jobCount += 1                                                                    # increment job counter
 
 # merge relevant output frames into a single output file
@@ -204,7 +219,7 @@ for i in range(jobCount - 1):
     da = crackLength[i + 1] - crackLength[i]
     fy = Fy[i][crackTip[i]]
     uy = Uy[i + 1][crackTip[i]]
-    Gi = -(2.0*uy*fy)/(2.0*da)
+    Gi = -(2.0*uy*fy)/(2.0*B*da)
     Ki.append(math.sqrt(Gi*E))
 
 # "analytical" solution
@@ -221,8 +236,8 @@ Ki_ana = P/B*math.sqrt(math.pi/W)*(
 plt.figure()
 plt.xlabel('Crack Length [mm]')
 plt.ylabel(r'Stress Intensity Factor [MPa⋅mm$^\text{1/2}$]')
-plt.plot(crackLength[:-3], Ki[:-2], '-ok', label='VCCT')
-plt.plot(a_ana, Ki_ana, '-r', label='Analytical')
+plt.plot(crackLength[:-1], Ki, '-k', label='VCCT')
+plt.plot(a_ana, Ki_ana, '--r', label='Analytical')
 plt.legend()
 plt.savefig('advanced3.png')
 print('Done')

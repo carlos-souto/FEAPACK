@@ -17,7 +17,7 @@
         </nav>
         <div class="content">
             <h1>FEAPACK Quick Start Guide</h1>
-            <p>Last updated on 2024-01-28.</p>
+            <p>Last updated on 2024-04-21.</p>
             <div class="separator"></div>
             <h2>Contents</h2>
             <div class="toc">
@@ -41,7 +41,7 @@
             </div>
             <div class="separator"></div>
             <h2 id="introduction">1. Introduction</h2>
-            <p>This is a quick start guide for FEAPACK, a finite element analysis package for solids fully written in Python. Currently, FEAPACK works with Python 3.12 on Windows x64, and it is available via pip. This guide presents tutorials on how to use the software.</p>
+            <p>This is a quick start guide for FEAPACK, a finite element analysis package for solids fully written in Python. Currently, FEAPACK works with Python 3.12 (or later) on Windows x64, and it is available via pip. This guide presents tutorials on how to use the software.</p>
             <h3 id="whatis">1.1. What is FEAPACK</h3>
             <p>FEAPACK is an open-source Python package for performing linear perturbation analyses on solids via the finite element method, including static, frequency, and buckling analyses. Several finite elements are implemented, which can be applied in plane stress, plane strain, axisymmetric, and general three-dimensional cases. Distinct loading conditions can be modelled via the application of concentrated nodal loads, distributed surface loads (namely, pressures and surface tractions), and inertia loads (namely, body forces and accelerations, e.g., due to gravity). FEAPACK also has built-in capabilities for visualizing and interacting with finite element models and results.</p>
             <p>Under the hood, FEAPACK utilizes efficient and well-established computational routines. It uses NumPy for general computations during the solution phase, but also Intel's Math Kernel Library for the solution of large sparse systems of equations, namely PARDISO and the Extended Eigensolver. FEAPACK also uses a custom approach for building and storing large sparse matrices arising from the finite element method, enabling their computation in parallel. However, FEAPACK for Python is not meant to be an extremely fast or efficient finite element package, as it is inherently limited by Python's performance. Instead, FEAPACK is meant to be easy to use for academic and research purposes, as the source code can easily be modified to explore and implement new approaches based on the finite element method.</p>
