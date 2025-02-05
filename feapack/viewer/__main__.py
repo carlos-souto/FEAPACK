@@ -1,20 +1,17 @@
 import sys
 import feapack.resources as res
 from feapack.viewer import MainWindow
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 if __name__ == "__main__":
 
-    # determine light or dark mode (experimental)
-    darkMode: bool = "-dark" in sys.argv
-    argv: list[str] = [sys.argv[0], "-platform", f"windows:darkmode={1 if not darkMode else 2}"]
-
     # create application object
-    app: QApplication = QApplication(argv)
+    app: QApplication = QApplication(sys.argv)
     app.setStyle("Fusion")
 
     # load resources
-    res.load(darkMode)
+    res.load(QApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark)
 
     # create main window
     mainWindow: MainWindow = MainWindow()

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "feapack"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
     { name="Carlos Souto", email="csouto@fe.up.pt" },
 ]
@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "mkl<2024",
+    "mkl",
     "vtk",
     "PySide6",
     "pillow",
